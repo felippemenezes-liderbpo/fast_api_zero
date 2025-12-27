@@ -17,7 +17,8 @@ dev = [
 ]
 
 [tool.pyrefly]
-project-includes = ['app']
+project-includes = ['app/**/*.py']
+project-excludes = ["migrations/**"]
 search-path = ['app']
 python-version = '3.12'
 
