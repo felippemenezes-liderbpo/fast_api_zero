@@ -4,9 +4,7 @@ version = "0.1.0"
 description = "FastAPI do zero!"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
-dependencies = [
-    "fastapi[standard]>=0.127.1",
-]
+dependencies = ["fastapi[standard]>=0.127.1"]
 
 [dependency-groups]
 dev = [
@@ -17,6 +15,11 @@ dev = [
     "ruff>=0.14.10",
     "taskipy>=1.14.1",
 ]
+
+[tool.pyrefly]
+project-includes = ['app']
+search-path = ['app']
+python-version = '3.12'
 
 [tool.ruff]
 line-length = 79
@@ -31,10 +34,12 @@ preview = true
 quote-style = 'single'
 
 [tool.taskipy.tasks]
-lint = 'ruff check'
-pre_format = 'ruff check --fix'
-format = 'ruff format'
+check = 'pyrefly check .'
+lint = 'ruff check .'
+post_lint = 'ruff check . --diff'
+pre_format = 'ruff check . --fix'
+format = 'ruff format .'
 run = 'fastapi dev app/main.py'
-pre_test = 'task lint'
+pre_test = 'task format'
 test = 'pytest -s -x --cov=app -vv'
 post_test = 'coverage html'
