@@ -1,26 +1,85 @@
 from http import HTTPStatus
 
-from bs4 import BeautifulSoup
 from fastapi.testclient import TestClient
 
-from app.main import app
 
-client = TestClient(app)
+def test_create_user(client: TestClient) -> None:
+    user: dict[str, str] = {
+        'username': 'alice',
+        'email': 'alice@example.com',
+        'password': 'secret',
+    }
+    response = client.post(
+        '/users/',
+        json=user,
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json() == {
+        'id': 1,
+        'username': user['username'],
+        'email': user['email'],
+    }
 
 
-def test_root_must_return_ok_headers_json_and_message_hello_world() -> None:
-    response = client.get('/')
+# TODO: Adicionar validação para criar usuário com inputs errados
+
+
+def test_read_users(client: TestClient) -> None:
+    response = client.get('/users/')
 
     assert response.status_code == HTTPStatus.OK
-    assert response.headers['content-type'].startswith('application/json')
-    assert response.json() == {'message': 'Hello World!'}
+    assert response.json() == {
+        'users': [
+            {
+                'id': 1,
+                'username': 'alice',
+                'email': 'alice@example.com',
+            }
+        ]
+    }
 
 
-def test_hello_must_return_ok_headers_html_and_title_hello_world() -> None:
-    response = client.get('/hello')
-    soup = BeautifulSoup(response.text, 'html.parser')
+# TODO: Adicionar validação listar usuários com db vazio
+
+
+def test_update_user(client: TestClient) -> None:
+    new_user: dict[str, str] = {
+        'username': 'bob',
+        'email': 'bob@example.com',
+        'password': 'newpassword',
+    }
+    response = client.put('/users/1', json=new_user)
 
     assert response.status_code == HTTPStatus.OK
-    assert response.headers['content-type'].startswith('text/html')
-    assert soup.title is not None
-    assert soup.title.get_text(strip=True) == 'Hello World'
+    assert response.json() == {
+        'id': 1,
+        'username': new_user['username'],
+        'email': new_user['email'],
+    }
+
+
+def test_update_user_not_found(client: TestClient) -> None:
+    new_user: dict[str, str] = {
+        'username': 'bob',
+        'email': 'bob@example.com',
+        'password': 'newpassword',
+    }
+    response = client.put('/users/999', json=new_user)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'User not found'}
+
+
+def test_delete_user(client: TestClient) -> None:
+    response = client.delete('/users/1')
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'message': 'User deleted successfully'}
+
+
+def test_delete_user_not_found(client: TestClient) -> None:
+    response = client.delete('/users/999')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'User not found'}
