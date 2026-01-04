@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    LOGFIRE_TOKEN: str
+    LOGFIRE_TOKEN: str = ''
     DATABASE_LOWER_LIMIT: int = 1
 
     model_config = SettingsConfigDict(

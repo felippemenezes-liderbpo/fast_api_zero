@@ -7,19 +7,18 @@ from fastapi.exceptions import HTTPException
 from app.config import settings
 from app.schemas import Message, UserDB, UserList, UserPublic, UserSchema
 
-logfire.configure(token=settings.LOGFIRE_TOKEN)
-
 app = FastAPI()
 database: list[UserDB] = []
+
+logfire.configure(token=settings.LOGFIRE_TOKEN)
+logfire.instrument_fastapi(app)
 
 
 @app.post('/users/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
 def create_user(user: UserSchema) -> UserDB:
     user_with_id = UserDB(**user.model_dump(), id=len(database) + 1)
-    logfire.info(f'{user_with_id!s} created')
 
     database.append(user_with_id)
-    logfire.info(f'{user_with_id!s} added to database')
 
     return user_with_id
 
@@ -60,6 +59,5 @@ def delete_user(user_id: int):
         )
 
     del database[user_id - 1]
-    logfire.info(f'User with id {user_id} deleted')
 
     return {'message': 'User deleted successfully'}
