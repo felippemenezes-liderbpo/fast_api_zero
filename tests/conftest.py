@@ -34,11 +34,15 @@ def mock_db_time():
         def fake_time_hook(target, **_):
             if hasattr(target, 'created_at'):
                 target.created_at = time
+            if hasattr(target, 'updated_at'):
+                target.updated_at = time
 
         event.listen(model, 'before_insert', fake_time_hook, named=True)
+        event.listen(model, 'before_update', fake_time_hook, named=True)
         try:
             yield time
         finally:
             event.remove(model, 'before_insert', fake_time_hook)
+            event.remove(model, 'before_update', fake_time_hook)
 
     return _factory
