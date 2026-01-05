@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import Annotated
 
 import logfire
 from fastapi import Depends, FastAPI
@@ -20,9 +19,7 @@ logfire.instrument_fastapi(app)
 
 
 @app.post('/users/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
-def create_user(
-    user: UserSchema, session: Annotated[Session, Depends(get_session)]
-):
+def create_user(user: UserSchema, session: Session = Depends(get_session)):
     db_user = session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
