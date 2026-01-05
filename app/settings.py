@@ -10,6 +10,3 @@ class Settings(BaseSettings):
     LOGFIRE_TOKEN: str = ''
     DATABASE_LOWER_LIMIT: int = 1
     DATABASE_URL: str = ''
-
-
-settings = Settings()

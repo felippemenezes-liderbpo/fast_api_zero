@@ -5,12 +5,12 @@ from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 
 from app.schemas import Message, UserDB, UserList, UserPublic, UserSchema
-from app.settings import settings
+from app.settings import Settings
 
 app = FastAPI()
 database: list[UserDB] = []
 
-logfire.configure(token=settings.LOGFIRE_TOKEN)
+logfire.configure(token=Settings().LOGFIRE_TOKEN)
 logfire.instrument_fastapi(app)
 
 
@@ -30,7 +30,7 @@ def read_users() -> dict[str, list[UserDB]]:
 
 @app.get('/users/{user_id}', response_model=UserPublic)
 def read_user(user_id: int):
-    if user_id > len(database) or user_id < settings.DATABASE_LOWER_LIMIT:
+    if user_id > len(database) or user_id < Settings().DATABASE_LOWER_LIMIT:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
@@ -40,7 +40,7 @@ def read_user(user_id: int):
 
 @app.put('/users/{user_id}', response_model=UserPublic)
 def update_user(user_id: int, user: UserSchema) -> UserDB:
-    if user_id > len(database) or user_id < settings.DATABASE_LOWER_LIMIT:
+    if user_id > len(database) or user_id < Settings().DATABASE_LOWER_LIMIT:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
@@ -53,7 +53,7 @@ def update_user(user_id: int, user: UserSchema) -> UserDB:
 
 @app.delete('/users/{user_id}', response_model=Message)
 def delete_user(user_id: int):
-    if user_id > len(database) or user_id < settings.DATABASE_LOWER_LIMIT:
+    if user_id > len(database) or user_id < Settings().DATABASE_LOWER_LIMIT:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
