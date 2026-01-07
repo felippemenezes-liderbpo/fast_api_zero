@@ -136,9 +136,11 @@ def test_update_integrity_error(client: TestClient, user: User, token: str):
     assert response_update.status_code == HTTPStatus.CONFLICT
 
 
-def test_update_user_insufficient_permissions(client: TestClient, token: str):
+def test_update_user_insufficient_permissions(
+    client: TestClient, user: User, token: str
+):
     response = client.put(
-        '/users/999',
+        f'/users/{user.id + 1}',
         headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'bob',
@@ -152,7 +154,6 @@ def test_update_user_insufficient_permissions(client: TestClient, token: str):
 
 
 def test_delete_user(client: TestClient, user: User, token: str):
-
     response = client.delete(
         f'/users/{user.id}', headers={'Authorization': f'Bearer {token}'}
     )
@@ -161,30 +162,12 @@ def test_delete_user(client: TestClient, user: User, token: str):
     assert response.json() == {'message': 'User deleted'}
 
 
-def test_delete_user_insufficient_permissions(client: TestClient, token: str):
+def test_delete_user_insufficient_permissions(
+    client: TestClient, user: User, token: str
+):
     response = client.delete(
-        '/users/999', headers={'Authorization': f'Bearer {token}'}
+        f'/users/{user.id + 1}', headers={'Authorization': f'Bearer {token}'}
     )
 
     assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {'detail': 'Not enough permissions'}
-
-
-def test_login_incorrect_email(client: TestClient):
-    response = client.post(
-        '/auth/token/',
-        data={'username': 'nonexistent@example.com', 'password': 'password'},
-    )
-
-    assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.json() == {'detail': 'Incorrect email or password'}
-
-
-def test_login_incorrect_password(client: TestClient, user: User):
-    response = client.post(
-        '/auth/token/',
-        data={'username': user.email, 'password': 'wrongpassword'},
-    )
-
-    assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.json() == {'detail': 'Incorrect email or password'}

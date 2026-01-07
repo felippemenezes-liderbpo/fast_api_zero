@@ -11,9 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_session
 from app.models import User
-from app.settings import Settings
+from app.settings import settings
 
-settings = Settings()
 pwd_context = PasswordHash.recommended()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
 
