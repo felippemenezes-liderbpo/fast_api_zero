@@ -22,12 +22,12 @@ from app.security import (
 )
 
 router = APIRouter(prefix='/users', tags=['users'])
-Session = Annotated[Session, Depends(get_session)]
-CurrentUser = Annotated[User, Depends(get_current_user)]
+SessionDep = Annotated[Session, Depends(get_session)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
-def create_user(user: UserSchema, session: Session):
+def create_user(user: UserSchema, session: SessionDep):
     db_user = session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
@@ -60,7 +60,7 @@ def create_user(user: UserSchema, session: Session):
 
 @router.get('/', response_model=UserList)
 def read_users(
-    session: Session,
+    session: SessionDep,
     filter_users: Annotated[FilterPage, Query()],
 ):
     return {
@@ -72,7 +72,10 @@ def read_users(
 
 @router.put('/{user_id}', response_model=UserPublic)
 def update_user(
-    user_id: int, user: UserSchema, session: Session, current_user: CurrentUser
+    user_id: int,
+    user: UserSchema,
+    session: SessionDep,
+    current_user: CurrentUserDep,
 ):
     if current_user.id != user_id:
         raise HTTPException(
@@ -95,7 +98,9 @@ def update_user(
 
 
 @router.delete('/{user_id}', response_model=Message)
-def delete_user(user_id: int, session: Session, current_user: CurrentUser):
+def delete_user(
+    user_id: int, session: SessionDep, current_user: CurrentUserDep
+):
     if current_user.id != user_id:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail='Not enough permissions'
