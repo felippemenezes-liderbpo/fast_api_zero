@@ -146,12 +146,15 @@ def test_update_integrity_error(client: TestClient, user: User, token: str):
         headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'fausto',
-            'email': 'bob@example.com',
-            'password': 'mynewpassword',
+            'email': f'{user.email}',
+            'password': f'{user.clean_password}',
         },
     )
 
     assert response_update.status_code == HTTPStatus.CONFLICT
+    assert response_update.json() == {
+        'detail': 'Username or Email already exists'
+    }
 
 
 def test_update_user_insufficient_permissions(
