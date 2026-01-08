@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Annotated
 from zoneinfo import ZoneInfo
 
 from fastapi import Depends, HTTPException
@@ -7,7 +8,7 @@ from fastapi.security.oauth2 import OAuth2PasswordBearer
 from jwt import DecodeError, decode, encode
 from pwdlib import PasswordHash
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
 from app.models import User
@@ -16,10 +17,13 @@ from app.settings import settings
 pwd_context = PasswordHash.recommended()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
 
+TokenDep = Annotated[str, Depends(oauth2_scheme)]
+AsyncSessionDep = Annotated[AsyncSession, Depends(get_session)]
 
-def get_current_user(
-    session: Session = Depends(get_session),
-    token: str = Depends(oauth2_scheme),
+
+async def get_current_user(
+    session: AsyncSessionDep,
+    token: TokenDep,
 ):
     credentials_exception = HTTPException(
         status_code=HTTPStatus.UNAUTHORIZED,
@@ -39,7 +43,9 @@ def get_current_user(
         raise credentials_exception from exc
 
     if not (
-        user := session.scalar(select(User).where(User.email == subject_email))
+        user := await session.scalar(
+            select(User).where(User.email == subject_email)
+        )
     ):
         raise credentials_exception
 
