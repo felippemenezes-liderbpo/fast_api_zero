@@ -18,7 +18,7 @@ def test_get_token(client: TestClient, user: User):
 
     assert response.status_code == HTTPStatus.OK
     assert 'access_token' in token
-    assert 'token_type' in token
+    assert token['token_type'] == 'bearer'
 
 
 def test_token_expired_after_time(client: TestClient, user: User, token_time):
@@ -57,7 +57,6 @@ def test_refresh_token(client: TestClient, token: str):
 
     assert response.status_code == HTTPStatus.OK
     assert 'access_token' in data
-    assert 'token_type' in data
     assert data['token_type'] == 'bearer'
 
 
