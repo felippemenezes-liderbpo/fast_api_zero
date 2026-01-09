@@ -75,14 +75,17 @@ def test_create_user_with_existing_email(client: TestClient):
     assert response.json() == {'detail': 'Email already exists'}
 
 
-def test_read_users_with_user(client: TestClient, user: User):
+def test_read_users_with_user(
+    client: TestClient, user: User, other_user: User
+):
     user_schema = UserPublic.model_validate(user).model_dump()
+    other_user_schema = UserPublic.model_validate(other_user).model_dump()
 
     response = client.get('/users/')
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'users': [user_schema],
+        'users': [user_schema, other_user_schema],
     }
 
 
