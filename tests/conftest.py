@@ -64,6 +64,8 @@ async def session() -> AsyncSession:
     async with engine.begin() as conn:
         await conn.run_sync(table_registry.metadata.drop_all)
 
+    await engine.dispose()
+
 
 @pytest.fixture
 def mock_db_time():

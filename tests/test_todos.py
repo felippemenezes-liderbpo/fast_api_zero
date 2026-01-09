@@ -2,13 +2,14 @@ from http import HTTPStatus
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from app.models import TodoState, User
+from app.models import Todo, TodoState, User
 from tests.conftest import TodoFactory
 
 
-def test_create_todo(client, token):
+def test_create_todo(client: TestClient, token: str):
     response = client.post(
         '/todos/',
         headers={'Authorization': f'Bearer {token}'},
@@ -27,6 +28,8 @@ def test_create_todo(client, token):
         'title': 'Test Todo',
         'description': 'Test todo description',
         'state': 'draft',
+        'created_at': data['created_at'],
+        'updated_at': data['updated_at'],
     }
 
 
@@ -163,6 +166,28 @@ async def test_list_todos_filter_combined_should_return_5_todos(
     assert len(response.json()['todos']) == expected_todos
 
 
+@pytest.mark.asyncio
+async def test_list_todos_filter_title_less_3(client: TestClient, token: str):
+    response = client.get(
+        '/todos/?state=ab',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+@pytest.mark.asyncio
+async def test_list_todos_filter_title_greater_20(
+    client: TestClient, token: str
+):
+    response = client.get(
+        '/todos/?state=abcdefghijklmnopqrstuvwxyz',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
 def test_patch_todo_not_found(client: TestClient, token: str):
     response = client.patch(
         '/todos/10',
@@ -221,3 +246,18 @@ async def test_delete_todo_not_found(client: TestClient, token: str):
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'Task not found'}
+
+
+@pytest.mark.asyncio
+async def test_todo_state_invalid_value(session: AsyncSession, user: User):
+    todo = Todo(
+        user_id=user.id,
+        title='Test Todo',
+        description='Test description',
+        state='invalid_state',
+    )
+    session.add(todo)
+    await session.commit()
+
+    with pytest.raises(LookupError, match='invalid_state'):
+        await session.scalar(select(Todo).where(Todo.id == todo.id))

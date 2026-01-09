@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -20,6 +21,8 @@ class UserPublic(BaseModel):
     username: str
     email: EmailStr
     model_config = ConfigDict(from_attributes=True)
+    created_at: datetime
+    updated_at: datetime
 
 
 class UserList(BaseModel):
@@ -50,6 +53,8 @@ class TodoSchema(BaseModel):
 
 class TodoPublic(TodoSchema):
     id: int
+    created_at: datetime
+    updated_at: datetime
 
 
 class TodoList(BaseModel):

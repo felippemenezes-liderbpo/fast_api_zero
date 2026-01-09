@@ -10,21 +10,24 @@ from tests.conftest import UserFactory
 
 
 def test_create_user(client: TestClient):
-    user = {
-        'username': 'alice',
-        'email': 'alice@example.com',
-        'password': 'secret',
-    }
     response = client.post(
         '/users/',
-        json=user,
+        json={
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'secret',
+        },
     )
 
+    data = response.json()
+
     assert response.status_code == HTTPStatus.CREATED
-    assert response.json() == {
+    assert data == {
         'id': 1,
-        'username': user['username'],
-        'email': user['email'],
+        'username': 'alice',
+        'email': 'alice@example.com',
+        'created_at': data['created_at'],
+        'updated_at': data['updated_at'],
     }
 
 
@@ -81,8 +84,10 @@ def test_create_user_with_existing_email(client: TestClient):
 def test_read_users_with_user(
     client: TestClient, user: User, other_user: User
 ):
-    user_schema = UserPublic.model_validate(user).model_dump()
-    other_user_schema = UserPublic.model_validate(other_user).model_dump()
+    user_schema = UserPublic.model_validate(user).model_dump(mode='json')
+    other_user_schema = UserPublic.model_validate(other_user).model_dump(
+        mode='json'
+    )
 
     response = client.get('/users/')
 
@@ -123,6 +128,8 @@ def test_read_user(client: TestClient, user: User):
         'id': user.id,
         'username': user.username,
         'email': user.email,
+        'created_at': user.created_at.isoformat(),
+        'updated_at': user.updated_at.isoformat(),
     }
 
 
@@ -149,6 +156,8 @@ def test_update_user(client: TestClient, user: User, token: str):
         'id': user.id,
         'username': 'bob',
         'email': 'bob@example.com',
+        'created_at': user.created_at.isoformat(),
+        'updated_at': user.updated_at.isoformat(),
     }
 
 
