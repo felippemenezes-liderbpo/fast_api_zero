@@ -19,7 +19,10 @@ def test_create_todo(client, token):
         },
     )
 
-    assert response.json() == {
+    data = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert data == {
         'id': 1,
         'title': 'Test Todo',
         'description': 'Test todo description',
