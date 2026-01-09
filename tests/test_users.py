@@ -1,9 +1,12 @@
 from http import HTTPStatus
 
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from app.models import User
 from app.schemas import UserPublic
+from tests.conftest import UserFactory
 
 
 def test_create_user(client: TestClient):
@@ -87,6 +90,22 @@ def test_read_users_with_user(
     assert response.json() == {
         'users': [user_schema, other_user_schema],
     }
+
+
+@pytest.mark.asyncio
+async def test_read_users_pagination(
+    session: AsyncSession, client: TestClient
+):
+    expected_users = 2
+    session.add_all(UserFactory.create_batch(5))
+    await session.commit()
+
+    response = client.get(
+        '/users/?offset=1&limit=2',
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert len(response.json()['users']) == expected_users
 
 
 def test_read_users_empty(client: TestClient):
