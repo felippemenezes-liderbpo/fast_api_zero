@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import factory
 import pytest
@@ -14,6 +14,7 @@ from app.database import get_session
 from app.main import app
 from app.models import User, table_registry
 from app.security import get_password_hash
+from app.settings import settings
 
 
 class UserFactory(factory.Factory):
@@ -106,3 +107,15 @@ def token(client: TestClient, user: User) -> str:
         data={'username': user.email, 'password': user.clean_password},
     )
     return response.json()['access_token']
+
+
+@pytest.fixture
+def token_time():
+    @contextmanager
+    def _factory(creation: datetime = datetime(2026, 1, 1, 12, 0, 0)):
+        expired = creation + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES + 1
+        )
+        yield {'creation': creation, 'expired': expired}
+
+    return _factory
